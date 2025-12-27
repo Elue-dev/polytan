@@ -10,6 +10,12 @@ defmodule Polytan.Context.Account.Users do
 
   def get_user(id), do: Repo.get(User, id)
 
+  def get_by_email(email) do
+    User
+    |> where(email: ^email)
+    |> Repo.one()
+  end
+
   def create_user(attrs) do
     %User{}
     |> User.changeset(attrs)
