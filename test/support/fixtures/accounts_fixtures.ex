@@ -58,4 +58,24 @@ defmodule Polytan.AccountsFixtures do
 
     account_membership
   end
+
+  @doc """
+  Generate a invitation.
+  """
+  def invitation_fixture(attrs \\ %{}) do
+    {:ok, invitation} =
+      attrs
+      |> Enum.into(%{
+        accepted_at: ~U[2025-12-26 15:15:00Z],
+        account_id: "7488a646-e31f-11e4-aace-600308960662",
+        email: "some email",
+        expires_at: ~U[2025-12-26 15:15:00Z],
+        invited_by: "7488a646-e31f-11e4-aace-600308960662",
+        role: "some role",
+        token: "some token"
+      })
+      |> Polytan.Accounts.create_invitation()
+
+    invitation
+  end
 end

@@ -190,4 +190,70 @@ defmodule Polytan.AccountsTest do
       assert %Ecto.Changeset{} = Accounts.change_account_membership(account_membership)
     end
   end
+
+  describe "invitations" do
+    alias Polytan.Accounts.Invitation
+
+    import Polytan.AccountsFixtures
+
+    @invalid_attrs %{token: nil, role: nil, account_id: nil, email: nil, expires_at: nil, invited_by: nil, accepted_at: nil}
+
+    test "list_invitations/0 returns all invitations" do
+      invitation = invitation_fixture()
+      assert Accounts.list_invitations() == [invitation]
+    end
+
+    test "get_invitation!/1 returns the invitation with given id" do
+      invitation = invitation_fixture()
+      assert Accounts.get_invitation!(invitation.id) == invitation
+    end
+
+    test "create_invitation/1 with valid data creates a invitation" do
+      valid_attrs = %{token: "some token", role: "some role", account_id: "7488a646-e31f-11e4-aace-600308960662", email: "some email", expires_at: ~U[2025-12-26 15:15:00Z], invited_by: "7488a646-e31f-11e4-aace-600308960662", accepted_at: ~U[2025-12-26 15:15:00Z]}
+
+      assert {:ok, %Invitation{} = invitation} = Accounts.create_invitation(valid_attrs)
+      assert invitation.token == "some token"
+      assert invitation.role == "some role"
+      assert invitation.account_id == "7488a646-e31f-11e4-aace-600308960662"
+      assert invitation.email == "some email"
+      assert invitation.expires_at == ~U[2025-12-26 15:15:00Z]
+      assert invitation.invited_by == "7488a646-e31f-11e4-aace-600308960662"
+      assert invitation.accepted_at == ~U[2025-12-26 15:15:00Z]
+    end
+
+    test "create_invitation/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Accounts.create_invitation(@invalid_attrs)
+    end
+
+    test "update_invitation/2 with valid data updates the invitation" do
+      invitation = invitation_fixture()
+      update_attrs = %{token: "some updated token", role: "some updated role", account_id: "7488a646-e31f-11e4-aace-600308960668", email: "some updated email", expires_at: ~U[2025-12-27 15:15:00Z], invited_by: "7488a646-e31f-11e4-aace-600308960668", accepted_at: ~U[2025-12-27 15:15:00Z]}
+
+      assert {:ok, %Invitation{} = invitation} = Accounts.update_invitation(invitation, update_attrs)
+      assert invitation.token == "some updated token"
+      assert invitation.role == "some updated role"
+      assert invitation.account_id == "7488a646-e31f-11e4-aace-600308960668"
+      assert invitation.email == "some updated email"
+      assert invitation.expires_at == ~U[2025-12-27 15:15:00Z]
+      assert invitation.invited_by == "7488a646-e31f-11e4-aace-600308960668"
+      assert invitation.accepted_at == ~U[2025-12-27 15:15:00Z]
+    end
+
+    test "update_invitation/2 with invalid data returns error changeset" do
+      invitation = invitation_fixture()
+      assert {:error, %Ecto.Changeset{}} = Accounts.update_invitation(invitation, @invalid_attrs)
+      assert invitation == Accounts.get_invitation!(invitation.id)
+    end
+
+    test "delete_invitation/1 deletes the invitation" do
+      invitation = invitation_fixture()
+      assert {:ok, %Invitation{}} = Accounts.delete_invitation(invitation)
+      assert_raise Ecto.NoResultsError, fn -> Accounts.get_invitation!(invitation.id) end
+    end
+
+    test "change_invitation/1 returns a invitation changeset" do
+      invitation = invitation_fixture()
+      assert %Ecto.Changeset{} = Accounts.change_invitation(invitation)
+    end
+  end
 end
