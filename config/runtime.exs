@@ -4,6 +4,14 @@ if System.get_env("PHX_SERVER") do
   config :polytan, PolytanWeb.Endpoint, server: true
 end
 
+guardian_secret_key = System.get_env("GUARDIAN_SECRET_KEY")
+
+if guardian_secret_key do
+  config :shop, PolytanWeb.Auth.Guardian,
+    issuer: "shop",
+    secret_key: guardian_secret_key
+end
+
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||
@@ -45,6 +53,13 @@ if config_env() == :prod do
       port: port
     ],
     secret_key_base: secret_key_base
+
+  unless guardian_secret_key do
+    raise """
+    environment variable GUARDIAN_SECRET_KEY is missing.
+    You can generate one by running: mix guardian.gen.secret
+    """
+  end
 
   # ## SSL Support
   #

@@ -14,7 +14,7 @@ defmodule PolytanWeb.Response.InvitationJSON do
       id: invitation.id,
       account_id: invitation.account_id,
       email: invitation.email,
-      role: invitation.role,
+      permissions: invitation.permissions,
       token: invitation.token,
       expires_at: invitation.expires_at,
       invited_by: invitation.invited_by,

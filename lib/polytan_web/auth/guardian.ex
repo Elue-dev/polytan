@@ -9,7 +9,7 @@ defmodule PolytanWeb.Auth.Guardian do
   def subject_for_token(_, _), do: {:error, :no_id_provided}
 
   def resource_from_claims(%{"sub" => id}) do
-    case Accounts.get_account_expanded!(id) do
+    case Accounts.load_account_users!(id) do
       nil -> {:error, :not_found}
       resource -> {:ok, resource}
     end

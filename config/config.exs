@@ -14,6 +14,11 @@ config :polytan, PolytanWeb.Endpoint,
   pubsub_server: Polytan.PubSub,
   live_view: [signing_salt: "nU42mWmh"]
 
+config :polytan, Oban,
+  repo: Polytan.Repo,
+  queues: [default: 10],
+  plugins: [Oban.Plugins.Pruner]
+
 config :polytan, Polytan.Mailer, adapter: Swoosh.Adapters.Local
 
 config :logger, :default_formatter,

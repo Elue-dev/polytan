@@ -10,6 +10,13 @@ defmodule Polytan.Context.Account.Accounts do
 
   def get_account(id), do: Repo.get(Account, id)
 
+  def load_account_users(id) do
+    Account
+    |> where(id: ^id)
+    |> preload([:user])
+    |> Repo.one!()
+  end
+
   def create_account(attrs) do
     %Account{}
     |> Account.changeset(attrs)

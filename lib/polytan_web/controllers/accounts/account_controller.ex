@@ -1,7 +1,7 @@
 defmodule PolytanWeb.AccountController do
   use PolytanWeb, :controller
 
-  alias Polytan.Context.Account.Accounts
+  alias Polytan.Context.Account.{Accounts}
   alias Polytan.Schema.Accounts.Account
 
   action_fallback PolytanWeb.FallbackController
@@ -11,12 +11,16 @@ defmodule PolytanWeb.AccountController do
     render(conn, :index, accounts: accounts)
   end
 
-  def create(conn, %{"account" => account_params}) do
-    with {:ok, %Account{} = account} <- Accounts.create_account(account_params) do
-      conn
-      |> put_status(:created)
-      |> render(:show, account: account)
-    end
+  def create(conn, %{"account" => _account_params}) do
+    conn
+    |> put_status(:created)
+    |> render(:show, account: %{id: 1, email: "example@example.com"})
+
+    # with {:ok, %Account{} = account} <- Accounts.create_account(account_params) do
+    #   conn
+    #   |> put_status(:created)
+    #   |> render(:show, account: account)
+    # end
   end
 
   def show(conn, %{"id" => id}) do

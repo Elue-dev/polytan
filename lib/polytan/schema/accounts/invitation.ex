@@ -2,17 +2,19 @@ defmodule Polytan.Schema.Accounts.Invitation do
   use Polytan.Schema
   import Ecto.Changeset
 
+  alias Polytan.Schema.Accounts.{Account, User}
+
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "invitations" do
-    field :account_id, Ecto.UUID
     field :email, :string
-    field :role, :string
+    field :permissions, :string
     field :token, :string
     field :expires_at, :utc_datetime
-    field :invited_by, Ecto.UUID
     field :accepted_at, :utc_datetime
 
+    belongs_to :account, Account
+    belongs_to :inviter, User, foreign_key: :invited_by
     timestamps(type: :utc_datetime)
   end
 
@@ -23,11 +25,10 @@ defmodule Polytan.Schema.Accounts.Invitation do
     |> validate_required([
       :account_id,
       :email,
-      :role,
+      :permissions,
       :token,
       :expires_at,
-      :invited_by,
-      :accepted_at
+      :invited_by
     ])
   end
 end

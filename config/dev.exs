@@ -2,7 +2,7 @@ import Config
 
 config :polytan, Polytan.Repo,
   username: "postgres",
-  password: "postgres",
+  password: System.get_env("PG_USER_PASS"),
   hostname: "localhost",
   database: "polytan",
   stacktrace: true,
