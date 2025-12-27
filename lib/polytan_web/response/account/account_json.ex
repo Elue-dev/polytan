@@ -1,4 +1,4 @@
-defmodule PolytanWeb.Response.Accounts.AccountJSON do
+defmodule PolytanWeb.Response.AccountJSON do
   alias Polytan.Schema.Accounts.Account
 
   def index(%{accounts: accounts}) do

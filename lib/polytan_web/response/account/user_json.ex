@@ -1,4 +1,4 @@
-defmodule PolytanWeb.Response.User.UserJSON do
+defmodule PolytanWeb.Response.UserJSON do
   alias Polytan.Schema.Accounts.User
 
   def index(%{users: users}) do

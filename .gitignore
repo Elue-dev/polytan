@@ -4,6 +4,10 @@
 # If you run "mix test --cover", coverage assets end up here.
 /cover/
 
+.env
+
+/.elixir_ls
+
 # The directory Mix downloads your dependencies sources to.
 /deps/
 
@@ -24,4 +28,3 @@ erl_crash.dump
 
 # Ignore package tarball (built via "mix hex.build").
 polytan-*.tar
-
