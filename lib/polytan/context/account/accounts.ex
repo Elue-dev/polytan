@@ -3,6 +3,11 @@ defmodule Polytan.Context.Account.Accounts do
   alias Polytan.Repo
 
   alias Polytan.Schema.Accounts.Account
+  alias Polytan.Context.Account.{Users, AccountMemberships}
+
+  @account_fields ~w(name owner_id)
+  @user_fields ~w(first_name last_name email  password)
+  @membership_fields ~w(account_id user_id)
 
   def list_accounts do
     Repo.all(Account)
@@ -10,11 +15,39 @@ defmodule Polytan.Context.Account.Accounts do
 
   def get_account(id), do: Repo.get(Account, id)
 
-  def load_account_users(id) do
+  def get_by_owner_id(owner_id), do: Repo.get_by(Account, owner_id: owner_id)
+
+  def load_account_user(id) do
     Account
     |> where(id: ^id)
-    |> preload([:user])
-    |> Repo.one!()
+    |> preload([:owner])
+    |> Repo.one()
+  end
+
+  def create_account_with_owner(params) do
+    Repo.transaction(fn ->
+      user_params = Map.take(params, @user_fields)
+      account_params = Map.take(params, @account_fields)
+      membership_params = Map.take(params, @membership_fields)
+
+      {:ok, user} = Users.create_user(user_params)
+
+      {:ok, account} =
+        account_params
+        |> Map.put("owner_id", user.id)
+        |> create_account()
+
+      membership_params =
+        membership_params
+        |> Map.put("account_id", account.id)
+        |> Map.put("user_id", user.id)
+        |> Map.put("permissions", ["account.owner"])
+
+      {:ok, _membership} =
+        AccountMemberships.create_account_membership(membership_params)
+
+      %{user: user, account: account}
+    end)
   end
 
   def create_account(attrs) do

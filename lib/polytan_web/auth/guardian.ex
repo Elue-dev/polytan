@@ -9,7 +9,7 @@ defmodule PolytanWeb.Auth.Guardian do
   def subject_for_token(_, _), do: {:error, :no_id_provided}
 
   def resource_from_claims(%{"sub" => id}) do
-    case Accounts.load_account_users!(id) do
+    case Accounts.load_account_user(id) do
       nil -> {:error, :not_found}
       resource -> {:ok, resource}
     end
@@ -17,25 +17,9 @@ defmodule PolytanWeb.Auth.Guardian do
 
   def resource_from_claims(_claims), do: {:error, :no_id_provided}
 
-  def authenticate(email, password) do
-    case Users.get_by_email(email) do
-      nil ->
-        {:error, :invalid_credentials}
-
-      user ->
-        user = Repo.preload(user, :account)
-
-        if validate_password(password, user.password) do
-          {:ok, user.account, create_token(user.account, :access)}
-        else
-          {:error, :invalid_credentials}
-        end
-    end
-  end
-
-  defp create_token(account, type) do
+  def create_token(account, type) do
     {:ok, token, _claims} = encode_and_sign(account, %{}, token_options(type))
-    token
+    {:ok, token}
   end
 
   def verify_user_token(token) do

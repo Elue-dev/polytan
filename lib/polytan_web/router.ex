@@ -1,5 +1,6 @@
 defmodule PolytanWeb.Router do
   use PolytanWeb, :router
+  use Plug.ErrorHandler
 
   defdelegate handle_errors(conn, error), to: Polytan.ErrorHandler
 
@@ -28,7 +29,18 @@ defmodule PolytanWeb.Router do
   scope "/api", PolytanWeb do
     pipe_through :api
 
-    post "/register", AccountController, :create
+    get "/ping", HealthController, :ping
+
+    scope "/auth" do
+      post "/register", AccountController, :register
+      post "/login", AccountController, :login
+    end
+  end
+
+  scope "/api", PolytanWeb do
+    pipe_through [:api, :auth]
+
+    get "/me", AccountController, :me
   end
 
   if Application.compile_env(:polytan, :dev_routes) do

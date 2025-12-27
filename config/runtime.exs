@@ -7,8 +7,8 @@ end
 guardian_secret_key = System.get_env("GUARDIAN_SECRET_KEY")
 
 if guardian_secret_key do
-  config :shop, PolytanWeb.Auth.Guardian,
-    issuer: "shop",
+  config :polytan, PolytanWeb.Auth.Guardian,
+    issuer: "polytan",
     secret_key: guardian_secret_key
 end
 

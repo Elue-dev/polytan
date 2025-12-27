@@ -8,7 +8,7 @@ defmodule Polytan.Schema.Accounts.Account do
   @foreign_key_type :binary_id
   schema "accounts" do
     field :name, :string
-    field :status, :string
+    field :status, :string, default: "active"
 
     belongs_to :owner, User
     has_many :account_memberships, AccountMembership
@@ -21,7 +21,9 @@ defmodule Polytan.Schema.Accounts.Account do
   def changeset(account, attrs) do
     account
     |> strict_cast(attrs, schema_fields(__MODULE__))
-    |> validate_required([:name, :status, :owner_id])
+    |> validate_required([:name, :owner_id])
     |> unique_constraint(:name)
+
+    # |> cast_assoc(:users)
   end
 end
