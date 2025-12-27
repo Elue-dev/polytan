@@ -1,5 +1,5 @@
 defmodule Polytan.Schema.Accounts.Invitation do
-  use Ecto.Schema
+  use Polytan.Schema
   import Ecto.Changeset
 
   @primary_key {:id, :binary_id, autogenerate: true}
@@ -19,7 +19,7 @@ defmodule Polytan.Schema.Accounts.Invitation do
   @doc false
   def changeset(invitation, attrs) do
     invitation
-    |> cast(attrs, [:account_id, :email, :role, :token, :expires_at, :invited_by, :accepted_at])
+    |> strict_cast(attrs, schema_fields(__MODULE__))
     |> validate_required([
       :account_id,
       :email,

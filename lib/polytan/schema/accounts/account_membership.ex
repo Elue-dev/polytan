@@ -1,5 +1,5 @@
 defmodule Polytan.Schema.Accounts.AccountMembership do
-  use Ecto.Schema
+  use Polytan.Schema
   import Ecto.Changeset
 
   @primary_key {:id, :binary_id, autogenerate: true}
@@ -21,22 +21,11 @@ defmodule Polytan.Schema.Accounts.AccountMembership do
   @doc false
   def changeset(account_membership, attrs) do
     account_membership
-    |> cast(attrs, [
-      :account_id,
-      :user_id,
-      :permissions,
-      :status,
-      :invited_at,
-      :joined_at,
-      :invited_by,
-      :removed_by,
-      :removed_reason
-    ])
+    |> cast(attrs, schema_fields(__MODULE__))
     |> validate_required([
       :account_id,
       :user_id,
       :permissions,
-      :status,
       :invited_at,
       :joined_at,
       :invited_by,

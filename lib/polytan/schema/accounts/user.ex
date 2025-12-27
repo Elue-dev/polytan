@@ -1,5 +1,5 @@
 defmodule Polytan.Schema.Accounts.User do
-  use Ecto.Schema
+  use Polytan.Schema
   import Ecto.Changeset
 
   @primary_key {:id, :binary_id, autogenerate: true}
@@ -16,7 +16,7 @@ defmodule Polytan.Schema.Accounts.User do
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:first_name, :last_name, :email, :password])
+    |> strict_cast(attrs, schema_fields(__MODULE__))
     |> validate_required([:first_name, :last_name, :email, :password])
   end
 end
