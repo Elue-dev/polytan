@@ -16,7 +16,7 @@ defmodule PolytanWeb.AccountController do
   def register(conn, params) do
     case Accounts.create_account_with_owner(params) do
       {:ok, %{user: user, account: account}} ->
-        token = Guardian.create_token(account, :access)
+        token = Guardian.create_token(user, :access)
 
         conn
         |> put_status(:created)
@@ -33,10 +33,12 @@ defmodule PolytanWeb.AccountController do
     with %User{} = user <- Users.get_by_email(email),
          %Account{} = account <- Accounts.get_by_owner_id(user.id),
          true <- Password.validate(password, user.password),
-         {:ok, token} <- Guardian.create_token(account, :access) do
+         {:ok, token} <- Guardian.create_token(user, :access) do
+      user = Users.get_user_with_accounts(user.id)
+
       conn
       |> put_status(:ok)
-      |> render(:show, account: account, user: user, token: token)
+      |> render(:show, user: user, token: token)
     else
       _ ->
         {:error, :invalid_credentials}
@@ -44,12 +46,17 @@ defmodule PolytanWeb.AccountController do
   end
 
   def me(conn, _params) do
-    case conn.assigns.current_account do
-      nil ->
+    case {conn.assigns.current_account, conn.assigns.current_user} do
+      {nil, _} ->
         {:error, :unauthenticated}
 
-      account ->
-        render(conn, :show, account: account.account, user: account.user)
+      {current_account, current_user} ->
+        user = Users.get_user_with_accounts(current_user.id)
+
+        render(conn, :show, %{
+          user: user,
+          current_account: current_account
+        })
     end
   end
 

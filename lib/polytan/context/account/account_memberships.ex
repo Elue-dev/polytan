@@ -10,6 +10,18 @@ defmodule Polytan.Context.Account.AccountMemberships do
 
   def get_account_membership(id), do: Repo.get(AccountMembership, id)
 
+  def get_active_membership(account_id, user_id) do
+    AccountMembership
+    |> where(
+      [m],
+      m.account_id == ^account_id and
+        m.user_id == ^user_id and
+        m.status == "active"
+    )
+    |> preload(:account)
+    |> Repo.one()
+  end
+
   def create_account_membership(attrs) do
     %AccountMembership{}
     |> AccountMembership.changeset(attrs)

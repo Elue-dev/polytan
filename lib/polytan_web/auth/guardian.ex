@@ -1,24 +1,23 @@
 defmodule PolytanWeb.Auth.Guardian do
   use Guardian, otp_app: :polytan
 
-  alias Polytan.Context.Account.{Accounts, Users}
-  alias Polytan.Repo
+  alias Polytan.Context.Account.{Users}
   alias Polytan.Core.Password
 
   def subject_for_token(%{id: id}, _claims), do: {:ok, to_string(id)}
   def subject_for_token(_, _), do: {:error, :no_id_provided}
 
   def resource_from_claims(%{"sub" => id}) do
-    case Accounts.load_account_user(id) do
+    case Users.get_user(id) do
       nil -> {:error, :not_found}
-      resource -> {:ok, resource}
+      user -> {:ok, user}
     end
   end
 
   def resource_from_claims(_claims), do: {:error, :no_id_provided}
 
-  def create_token(account, type) do
-    {:ok, token, _claims} = encode_and_sign(account, %{}, token_options(type))
+  def create_token(user, type) do
+    {:ok, token, _claims} = encode_and_sign(user, %{}, token_options(type))
     {:ok, token}
   end
 
@@ -26,7 +25,7 @@ defmodule PolytanWeb.Auth.Guardian do
     case decode_and_verify(token, %{}) do
       {:ok, claims} ->
         case resource_from_claims(claims) do
-          {:ok, account} -> {:ok, account}
+          {:ok, user} -> {:ok, user}
           {:error, _} -> :error
         end
 

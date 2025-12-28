@@ -8,11 +8,29 @@ defmodule Polytan.Context.Account.Users do
     Repo.all(User)
   end
 
-  def get_user(id), do: Repo.get(User, id)
+  # def get_user(id), do: Repo.get(User, id)
+
+  def get_user(id) do
+    User
+    |> where(id: ^id)
+    |> preload([:owned_accounts])
+    |> Repo.one()
+  end
 
   def get_by_email(email) do
     User
     |> where(email: ^email)
+    |> preload([:owned_accounts])
+    |> Repo.one()
+  end
+
+  def get_user_with_accounts(id) do
+    User
+    |> where(id: ^id)
+    |> preload([
+      :owned_accounts,
+      account_memberships: [:account]
+    ])
     |> Repo.one()
   end
 

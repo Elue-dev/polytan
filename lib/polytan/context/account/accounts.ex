@@ -20,7 +20,7 @@ defmodule Polytan.Context.Account.Accounts do
   def load_account_user(id) do
     Account
     |> where(id: ^id)
-    |> preload([:owner])
+    |> preload([:owner, :account_memberships])
     |> Repo.one()
   end
 
