@@ -15,7 +15,6 @@ defmodule PolytanWeb.Router do
   pipeline :auth do
     plug PolytanWeb.Auth.Pipeline
     plug PolytanWeb.Plugs.SetAccount
-    plug PolytanWeb.Plugs.ValidateActiveAccount
   end
 
   pipeline :browser do

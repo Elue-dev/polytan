@@ -12,7 +12,7 @@ defmodule PolytanWeb.Plugs.SetAccount do
   def call(conn, _opts) do
     with ["Bearer " <> token] <- get_req_header(conn, "authorization"),
          {:ok, user} <- Guardian.verify_user_token(token),
-         {:ok, account_id} <- fetch_account_id(conn),
+         {:ok, account_id} <- get_account_id(conn),
          membership when not is_nil(membership) <-
            AccountMemberships.get_active_membership(account_id, user.id) do
       conn
@@ -20,18 +20,15 @@ defmodule PolytanWeb.Plugs.SetAccount do
       |> assign(:current_account, membership.account)
       |> assign(:current_membership, membership)
     else
-      {:error, :missing_account_id} ->
-        respond(conn, :bad_request, "Missing account id")
-
       nil ->
-        respond(conn, :forbidden, "No access to this account")
+        respond(conn, :forbidden, "Forbidden")
 
       _ ->
         respond(conn, :unauthorized, "Unauthorized")
     end
   end
 
-  defp fetch_account_id(conn) do
+  defp get_account_id(conn) do
     case get_req_header(conn, "x-account-id") do
       [account_id] -> {:ok, account_id}
       _ -> {:error, :missing_account_id}
@@ -50,7 +47,7 @@ defmodule PolytanWeb.Plugs.SetAccount do
 
     conn
     |> put_status(status)
-    |> json(%{message: message})
+    |> json(%{error: message})
     |> halt()
   end
 end
