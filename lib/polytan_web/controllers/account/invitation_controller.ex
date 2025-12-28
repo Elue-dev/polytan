@@ -100,9 +100,9 @@ defmodule PolytanWeb.InvitationController do
   end
 
   defp verify_membership(account_id, user, invitation) do
-    case AccountMemberships.get_matching_memberships(account_id, user.id) do
-      [] -> create_membership(account_id, user, invitation)
-      [_ | _] -> {:error, :already_member}
+    case verify_membership(account_id, user.id) do
+      false -> create_membership(account_id, user, invitation)
+      error -> error
     end
   end
 
