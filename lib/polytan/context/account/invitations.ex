@@ -10,13 +10,13 @@ defmodule Polytan.Context.Account.Invitations do
 
   def get_invitation(id), do: Repo.get(Invitation, id)
 
-  def get_valid_invitation(token) do
+  def get_valid_invitation(id) do
     now =
       DateTime.utc_now()
       |> DateTime.truncate(:second)
 
     from(i in Invitation,
-      where: i.token == ^token,
+      where: i.id == ^id,
       where: i.expires_at > ^now,
       where: is_nil(i.accepted_at)
     )
