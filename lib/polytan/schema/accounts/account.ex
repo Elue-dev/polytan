@@ -23,7 +23,5 @@ defmodule Polytan.Schema.Accounts.Account do
     |> strict_cast(attrs, schema_fields(__MODULE__))
     |> validate_required([:name, :owner_id])
     |> unique_constraint(:name)
-
-    # |> cast_assoc(:users)
   end
 end

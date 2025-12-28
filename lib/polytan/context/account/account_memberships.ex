@@ -10,6 +10,17 @@ defmodule Polytan.Context.Account.AccountMemberships do
 
   def get_account_membership(id), do: Repo.get(AccountMembership, id)
 
+  def get_matching_memberships(account_id, user_id) do
+    AccountMembership
+    |> where(
+      [m],
+      m.account_id == ^account_id and
+        m.user_id == ^user_id
+    )
+    |> preload(:account)
+    |> Repo.all()
+  end
+
   def get_active_membership(account_id, user_id) do
     AccountMembership
     |> where(

@@ -30,23 +30,25 @@ defmodule Polytan.Context.Account.Accounts do
       account_params = Map.take(params, @account_fields)
       membership_params = Map.take(params, @membership_fields)
 
-      {:ok, user} = Users.create_user(user_params)
+      with {:ok, user} <- Users.create_user(user_params),
+           {:ok, account} <-
+             account_params
+             |> Map.put("owner_id", user.id)
+             |> create_account(),
+           {:ok, _membership} <-
+             membership_params
+             |> Map.put("account_id", account.id)
+             |> Map.put("user_id", user.id)
+             |> Map.put("permissions", ["account.owner"])
+             |> AccountMemberships.create_account_membership() do
+        %{user: user, account: account}
+      else
+        {:error, %Ecto.Changeset{} = changeset} ->
+          Repo.rollback(changeset)
 
-      {:ok, account} =
-        account_params
-        |> Map.put("owner_id", user.id)
-        |> create_account()
-
-      membership_params =
-        membership_params
-        |> Map.put("account_id", account.id)
-        |> Map.put("user_id", user.id)
-        |> Map.put("permissions", ["account.owner"])
-
-      {:ok, _membership} =
-        AccountMemberships.create_account_membership(membership_params)
-
-      %{user: user, account: account}
+        {:error, reason} ->
+          Repo.rollback(reason)
+      end
     end)
   end
 

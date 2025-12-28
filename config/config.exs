@@ -8,7 +8,7 @@ config :polytan, PolytanWeb.Endpoint,
   url: [host: "localhost"],
   adapter: Bandit.PhoenixAdapter,
   render_errors: [
-    formats: [json: PolytanWeb.Response.ErrorJSON],
+    formats: [json: PolytanWeb.ErrorJSON],
     layout: false
   ],
   pubsub_server: Polytan.PubSub,

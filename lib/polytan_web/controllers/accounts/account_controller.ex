@@ -15,27 +15,27 @@ defmodule PolytanWeb.AccountController do
 
   def register(conn, params) do
     case Accounts.create_account_with_owner(params) do
-      {:ok, %{user: user, account: account}} ->
+      {:ok, %{user: user, account: _account}} ->
         token = Guardian.create_token(user, :access)
+        user = Users.load_accounts(user.id)
 
         conn
         |> put_status(:created)
-        |> render(:show, account: account, user: user, token: token)
+        |> render(:show, user: user, token: token)
 
-      {:error, _step, reason, _changes} ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> json(%{error: reason})
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:error, changeset}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
   def login(conn, %{"email" => email, "password" => password}) do
     with %User{} = user <- Users.get_by_email(email),
-         %Account{} = account <- Accounts.get_by_owner_id(user.id),
          true <- Password.validate(password, user.password),
-         {:ok, token} <- Guardian.create_token(user, :access) do
-      user = Users.get_user_with_accounts(user.id)
-
+         {:ok, token} <- Guardian.create_token(user, :access),
+         %User{} = user <- Users.load_accounts(user.id) do
       conn
       |> put_status(:ok)
       |> render(:show, user: user, token: token)
@@ -45,13 +45,17 @@ defmodule PolytanWeb.AccountController do
     end
   end
 
+  def login(_conn, _params) do
+    {:error, :bad_request}
+  end
+
   def me(conn, _params) do
     case {conn.assigns.current_account, conn.assigns.current_user} do
       {nil, _} ->
         {:error, :unauthenticated}
 
       {current_account, current_user} ->
-        user = Users.get_user_with_accounts(current_user.id)
+        user = Users.load_accounts(current_user.id)
 
         render(conn, :show, %{
           user: user,

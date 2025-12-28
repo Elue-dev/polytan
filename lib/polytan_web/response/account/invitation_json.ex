@@ -1,4 +1,4 @@
-defmodule PolytanWeb.Response.InvitationJSON do
+defmodule PolytanWeb.InvitationJSON do
   alias Polytan.Schema.Accounts.Invitation
 
   def index(%{invitations: invitations}) do

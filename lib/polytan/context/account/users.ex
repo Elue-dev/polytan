@@ -24,7 +24,7 @@ defmodule Polytan.Context.Account.Users do
     |> Repo.one()
   end
 
-  def get_user_with_accounts(id) do
+  def load_accounts(id) do
     User
     |> where(id: ^id)
     |> preload([

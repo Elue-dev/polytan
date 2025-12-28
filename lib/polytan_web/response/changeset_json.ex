@@ -1,4 +1,4 @@
-defmodule PolytanWeb.Response.ChangesetJSON do
+defmodule PolytanWeb.ChangesetJSON do
   @doc """
   Renders changeset errors.
   """

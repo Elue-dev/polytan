@@ -40,6 +40,8 @@ defmodule PolytanWeb.Router do
     pipe_through [:api, :auth]
 
     get "/me", AccountController, :me
+    post "/invitation", InvitationController, :create
+    post "/invitation/accept/:token", InvitationController, :accept
   end
 
   if Application.compile_env(:polytan, :dev_routes) do

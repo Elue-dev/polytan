@@ -1,4 +1,4 @@
-defmodule PolytanWeb.Response.AccountMembershipJSON do
+defmodule PolytanWeb.AccountMembershipJSON do
   alias Polytan.Schema.Accounts.AccountMembership, as: Membership
 
   def index(%{account_memberships: account_memberships}) do

@@ -30,13 +30,5 @@ defmodule Polytan.Schema.Accounts.AccountMembership do
       :user_id
     ])
     |> unique_constraint([:account_id, :user_id])
-    |> maybe_put_permissions_default()
-  end
-
-  defp maybe_put_permissions_default(changeset) do
-    case get_field(changeset, :permissions) do
-      nil -> put_change(changeset, :permissions, ["account.owner"])
-      _ -> changeset
-    end
   end
 end

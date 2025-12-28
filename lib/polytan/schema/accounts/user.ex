@@ -9,6 +9,7 @@ defmodule Polytan.Schema.Accounts.User do
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
+
   schema "users" do
     field :first_name, :string
     field :last_name, :string

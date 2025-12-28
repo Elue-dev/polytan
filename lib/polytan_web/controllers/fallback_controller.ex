@@ -4,7 +4,21 @@ defmodule PolytanWeb.FallbackController do
   def call(conn, {:error, %Ecto.Changeset{} = changeset}) do
     conn
     |> put_status(:unprocessable_entity)
+    |> put_view(PolytanWeb.ChangesetJSON)
     |> render(:error, changeset: changeset)
+  end
+
+  def call(conn, {:error, :not_found}) do
+    conn
+    |> put_status(:not_found)
+    |> put_view(html: PolytanWeb.ErrorHTML, json: PolytanWeb.ErrorJSON)
+    |> render(:"404")
+  end
+
+  def call(conn, {:error, :bad_request}) do
+    conn
+    |> put_status(:bad_request)
+    |> json(%{error: "Bad request"})
   end
 
   def call(conn, {:error, :unauthenticated}) do
@@ -19,9 +33,21 @@ defmodule PolytanWeb.FallbackController do
     |> json(%{error: "Invalid email or password"})
   end
 
+  def call(conn, {:error, :forbidden}) do
+    conn
+    |> put_status(:forbidden)
+    |> json(%{error: "Forbidden"})
+  end
+
   def call(conn, {:error, :not_found}) do
     conn
     |> put_status(:not_found)
     |> json(%{error: "Not Found"})
+  end
+
+  def call(conn, {:error, _reason}) do
+    conn
+    |> put_status(:internal_server_error)
+    |> json(%{error: "Internal server error"})
   end
 end
