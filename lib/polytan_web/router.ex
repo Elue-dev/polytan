@@ -40,7 +40,9 @@ defmodule PolytanWeb.Router do
     pipe_through [:api, :auth]
 
     get "/me", AccountController, :me
+    get "/invitations", InvitationController, :list
     post "/invitations", InvitationController, :create
+    delete "/invitations/:id", InvitationController, :delete
   end
 
   scope "/api", PolytanWeb do

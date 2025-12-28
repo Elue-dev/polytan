@@ -5,7 +5,7 @@ defmodule Polytan.Core.Permissions do
     "account.admin",
     "account.update",
     "invite.create",
-    "invite.revoke",
+    "invite.delete",
     "member.remove",
     "member.update"
   ]
@@ -14,20 +14,19 @@ defmodule Polytan.Core.Permissions do
 
   @type permission :: String.t()
 
-  def can?(%AccountMembership{} = membership, permission) do
+  def has_permission?(%AccountMembership{} = membership, permission) do
     (membership.status == "active" and permission in membership.permissions) or
       @account_owner in membership.permissions
   end
 
-  def can?(_, _), do: false
+  def has_permission?(_, _), do: false
 
   def authorize(%{assigns: assigns}, permission) do
     case assigns.current_membership do
       %AccountMembership{} = membership ->
-        if can?(membership, permission) do
-          :ok
-        else
-          {:error, :forbidden}
+        case has_permission?(membership, permission) do
+          true -> :ok
+          false -> {:error, :forbidden}
         end
 
       _ ->

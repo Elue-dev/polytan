@@ -9,7 +9,7 @@ defmodule PolytanWeb.InvitationController do
 
   plug :authorize_invite when action in [:create, :delete]
 
-  def index(conn, _params) do
+  def list(conn, _params) do
     invitations = Invitations.list_invitations()
     render(conn, :index, invitations: invitations)
   end
@@ -61,16 +61,15 @@ defmodule PolytanWeb.InvitationController do
     end
   end
 
-  def show(conn, %{"id" => id}) do
-    invitation = Invitations.get_invitation(id)
-    render(conn, :show, invitation: invitation)
-  end
-
   def delete(conn, %{"id" => id}) do
-    invitation = Invitations.get_invitation(id)
+    case Invitations.get_invitation(id) do
+      nil ->
+        respond(conn, :bad_request, "Invalid or expired invitation")
 
-    with {:ok, %Invitation{}} <- Invitations.delete_invitation(invitation) do
-      send_resp(conn, :no_content, "")
+      invitation ->
+        with {:ok, %Invitation{}} <- Invitations.delete_invitation(invitation) do
+          send_resp(conn, :no_content, "")
+        end
     end
   end
 
@@ -94,8 +93,6 @@ defmodule PolytanWeb.InvitationController do
   end
 
   defp verify_membership(account_id, user_id) do
-    IO.puts("HEREEEE")
-
     case AccountMemberships.get_matching_memberships(account_id, user_id) do
       [] -> false
       [_ | _] -> {:error, :already_member}
@@ -156,7 +153,13 @@ defmodule PolytanWeb.InvitationController do
   end
 
   defp authorize_invite(conn, _opts) do
-    case Permissions.authorize(conn, "invite.create") do
+    permission =
+      case conn.private.phoenix_action do
+        :create -> "invite.create"
+        :delete -> "invite.delete"
+      end
+
+    case Permissions.authorize(conn, permission) do
       :ok ->
         conn
 
