@@ -2,7 +2,7 @@ defmodule PolytanWeb.Router do
   use PolytanWeb, :router
   use Plug.ErrorHandler
 
-  defdelegate handle_errors(conn, error), to: Polytan.ErrorHandler
+  defdelegate handle_errors(conn, error), to: PolytanWeb.ErrorHandler
 
   pipeline :api do
     plug :accepts, ["json"]

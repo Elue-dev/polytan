@@ -1,14 +1,19 @@
-defmodule Polytan.ErrorHandler do
+defmodule PolytanWeb.ErrorHandler do
   @moduledoc """
-  Custom error handler for sanitizing error messages before sending to client
+  Custom error handler for sanitizing error messages, making them more readable and understandable, before sending to client
   """
 
   import Plug.Conn
   import Phoenix.Controller, only: [json: 2]
 
   def handle_errors(conn, %{reason: %Phoenix.Router.NoRouteError{message: message}}) do
+    sanitized =
+      message
+      |> String.replace(~r/\s*\([^)]+\)$/, "")
+
     conn
-    |> json(%{errors: message})
+    |> put_status(:not_found)
+    |> json(%{errors: sanitized})
     |> halt()
   end
 
@@ -33,7 +38,7 @@ defmodule Polytan.ErrorHandler do
   @doc """
   Sanitizes error messages to prevent leaking sensitive information
   """
-  def sanitize_error_message(nil), do: "An error occurred - please try again later"
+  def sanitize_error_message(nil), do: "An error occurred, please try again later"
 
   def sanitize_error_message(message) when is_binary(message) do
     cond do
@@ -41,7 +46,7 @@ defmodule Polytan.ErrorHandler do
         "Network error - please try again later"
 
       String.contains?(message, ["timeout", "timed out"]) ->
-        "Request timeout - please try again"
+        "Request timeout,  please try again"
 
       database_error?(message) ->
         "Service temporarily unavailable"
@@ -57,7 +62,7 @@ defmodule Polytan.ErrorHandler do
     end
   end
 
-  def sanitize_error_message(_), do: "An error occurred - please try again later"
+  def sanitize_error_message(_), do: "An error occurred, please try again later"
 
   defp determine_status_code(nil), do: :internal_server_error
 
