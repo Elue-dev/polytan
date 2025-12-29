@@ -15,6 +15,7 @@ defmodule Polytan.Schema.Accounts.User do
     field :last_name, :string
     field :email, :string
     field :password, :string
+    field :token_version, :integer, default: 0
 
     has_many :owned_accounts, Account, foreign_key: :owner_id
     has_many :account_memberships, AccountMembership

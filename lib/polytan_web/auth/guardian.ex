@@ -1,11 +1,24 @@
 defmodule PolytanWeb.Auth.Guardian do
   use Guardian, otp_app: :polytan
 
-  alias Polytan.Context.Account.{Users}
+  alias Polytan.Context.Account.Users
+  alias Polytan.Schema.Accounts.User
   alias Polytan.Core.Password
 
   def subject_for_token(%{id: id}, _claims), do: {:ok, to_string(id)}
   def subject_for_token(_, _), do: {:error, :no_id_provided}
+
+  def build_claims(claims, %User{token_version: version}, _opts) do
+    {:ok, Map.put(claims, "tv", version)}
+  end
+
+  def resource_from_claims(%{"sub" => id, "tv" => token_version}) do
+    case Users.get_user(id) do
+      nil -> {:error, :not_found}
+      %User{token_version: ^token_version} = user -> {:ok, user}
+      %User{} -> {:error, :token_revoked}
+    end
+  end
 
   def resource_from_claims(%{"sub" => id}) do
     case Users.get_user(id) do

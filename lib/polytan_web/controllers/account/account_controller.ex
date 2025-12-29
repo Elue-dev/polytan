@@ -9,8 +9,6 @@ defmodule PolytanWeb.AccountController do
   alias Polytan.Utils.Response
   alias Polytan.Core.Permissions
 
-  require Logger
-
   action_fallback PolytanWeb.FallbackController
 
   plug :authorize_action when action in [:transfer_ownership]

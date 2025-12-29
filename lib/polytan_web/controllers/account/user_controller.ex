@@ -3,32 +3,27 @@ defmodule PolytanWeb.UserController do
 
   alias Polytan.Context.Account.Users
   alias Polytan.Schema.Accounts.User
+  alias Polytan.Utils.Response
 
   action_fallback PolytanWeb.FallbackController
 
-  def index(conn, _params) do
-    users = Users.list_users()
-    render(conn, :index, users: users)
-  end
+  def logout(conn, _params) do
+    user = conn.assigns.current_user
 
-  def create(conn, %{"user" => user_params}) do
-    with {:ok, %User{} = user} <- Users.create_user(user_params) do
+    with {:ok, _} <- revoke_current_token(user) do
       conn
-      |> put_status(:created)
-      |> render(:show, user: user)
+      |> put_status(:ok)
+      |> json(%{message: "Logged out"})
+    else
+      {:error, :user_not_found} -> Response.send_error(conn, :not_found, "User not found")
+      {:error, reason} -> {:error, reason}
     end
   end
 
-  def show(conn, %{"id" => id}) do
-    user = Users.get_user(id)
-    render(conn, :show, user: user)
-  end
-
-  def update(conn, %{"id" => id, "user" => user_params}) do
-    user = Users.get_user(id)
-
-    with {:ok, %User{} = user} <- Users.update_user(user, user_params) do
-      render(conn, :show, user: user)
+  defp revoke_current_token(user) do
+    case Users.get_user(user.id) do
+      nil -> {:error, :user_not_found}
+      %User{} = user -> Users.update_user(user, %{token_version: user.token_version + 1})
     end
   end
 end
