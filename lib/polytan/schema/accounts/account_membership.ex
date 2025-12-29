@@ -5,6 +5,7 @@ defmodule Polytan.Schema.Accounts.AccountMembership do
   alias Polytan.Schema.Accounts.{Account, User}
 
   @statuses ~w[active inactive deactivated removed left]
+
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "account_memberships" do

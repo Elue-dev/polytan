@@ -37,13 +37,21 @@ defmodule PolytanWeb.Router do
   end
 
   scope "/api", PolytanWeb do
-    pipe_through [:api, :auth]
+    pipe_through ~w[api auth]a
 
     get "/me", AccountController, :me
     get "/invitations", InvitationController, :list
     post "/invitations", InvitationController, :create
     delete "/invitations/:id", InvitationController, :delete
     post "/memberships/:user_id/remove", AccountMembershipController, :remove_membership
+  end
+
+  scope "/api", PolytanWeb do
+    pipe_through ~w[api auth]a
+
+    scope "/accounts" do
+      post "/transfer-ownership/:new_owner_id", AccountController, :transfer_ownership
+    end
   end
 
   scope "/api", PolytanWeb do

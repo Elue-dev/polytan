@@ -10,13 +10,10 @@ defmodule Polytan.Core.Permissions do
     "member.update"
   ]
 
-  @account_owner "account.owner"
-  @account_admin "account.admin"
-
   @type permission :: String.t()
 
   def has_permission?(%AccountMembership{} = membership, permission) do
-    elevated_roles = [@account_owner, @account_admin]
+    elevated_roles = ~w[account.owner account.admin]
 
     (membership.status == "active" and permission in membership.permissions) or
       Enum.any?(elevated_roles, &(&1 in membership.permissions))
@@ -25,8 +22,6 @@ defmodule Polytan.Core.Permissions do
   def has_permission?(_, _), do: false
 
   def authorize(%{assigns: assigns}, permission) do
-    IO.puts("MEMBERSHIPPPP: #{inspect(assigns.current_membership)}")
-
     case assigns.current_membership do
       %AccountMembership{} = membership ->
         case has_permission?(membership, permission) do

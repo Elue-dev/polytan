@@ -54,23 +54,6 @@ defmodule PolytanWeb.AccountMembershipController do
     end
   end
 
-  def show(conn, %{"id" => id}) do
-    account_membership = Memberships.get_account_membership(id)
-    render(conn, :show, account_membership: account_membership)
-  end
-
-  def update_membership(conn, %{"id" => id, "account_membership" => account_membership_params}) do
-    account_membership = Memberships.get_account_membership(id)
-
-    with {:ok, %AccountMembership{} = account_membership} <-
-           Memberships.update_account_membership(
-             account_membership,
-             account_membership_params
-           ) do
-      render(conn, :show, account_membership: account_membership)
-    end
-  end
-
   defp ensure_not_an_owner(account_id, user_id) do
     case Memberships.get_active_membership(account_id, user_id) do
       nil ->
