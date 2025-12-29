@@ -113,8 +113,8 @@ defmodule PolytanWeb.ErrorHandler do
 
   defp handle_generic_error(message) do
     case Application.get_env(:shop, :environment) do
-      :prod -> "An error occurred - please try again later"
-      :test -> "An error occurred - please try again later"
+      :prod -> "An error occurred, please try again later"
+      :test -> "An error occurred, please try again later"
       _ -> message
     end
   end

@@ -63,21 +63,6 @@ defmodule PolytanWeb.AccountController do
     {:error, :bad_request}
   end
 
-  def me(conn, _params) do
-    case {conn.assigns.current_account, conn.assigns.current_user} do
-      {nil, _} ->
-        {:error, :unauthenticated}
-
-      {current_account, current_user} ->
-        user = Users.load_accounts(current_user.id)
-
-        render(conn, :show, %{
-          user: user,
-          current_account: current_account
-        })
-    end
-  end
-
   def transfer_ownership(conn, %{"new_owner_id" => new_owner_id} = _params) do
     current_account = conn.assigns.current_account
 
