@@ -16,12 +16,19 @@ defmodule PolytanWeb.AccountController do
   def register(conn, params) do
     case Accounts.create_account_with_owner(params) do
       {:ok, %{user: user, account: _account}} ->
-        token = Guardian.create_token(user, :access)
-        user = Users.load_accounts(user.id)
+        with {:ok, token} <- Guardian.create_token(user, :access),
+             %User{account_memberships: memberships} = user <- Users.load_accounts(user.id),
+             [_ | _] <- memberships do
+          conn
+          |> put_status(:created)
+          |> render(:show, user: user, token: token)
+        else
+          [] ->
+            {:error, :no_active_accounts}
 
-        conn
-        |> put_status(:created)
-        |> render(:show, user: user, token: token)
+          {:error, reason} ->
+            {:error, reason}
+        end
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:error, changeset}
@@ -35,11 +42,15 @@ defmodule PolytanWeb.AccountController do
     with %User{} = user <- Users.get_by_email(email),
          true <- Password.validate(password, user.password),
          {:ok, token} <- Guardian.create_token(user, :access),
-         %User{} = user <- Users.load_accounts(user.id) do
+         %User{account_memberships: memberships} = user <- Users.load_accounts(user.id),
+         [_ | _] <- memberships do
       conn
       |> put_status(:ok)
       |> render(:show, user: user, token: token)
     else
+      [] ->
+        {:error, :no_active_accounts}
+
       _ ->
         {:error, :invalid_credentials}
     end

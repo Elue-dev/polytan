@@ -43,6 +43,7 @@ defmodule PolytanWeb.Router do
     get "/invitations", InvitationController, :list
     post "/invitations", InvitationController, :create
     delete "/invitations/:id", InvitationController, :delete
+    post "/memberships/:user_id/remove", AccountMembershipController, :remove_membership
   end
 
   scope "/api", PolytanWeb do

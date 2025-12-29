@@ -2,7 +2,7 @@ defmodule Polytan.Context.Account.Users do
   import Ecto.Query, warn: false
   alias Polytan.Repo
 
-  alias Polytan.Schema.Accounts.User
+  alias Polytan.Schema.Accounts.{User, AccountMembership}
 
   def list_users do
     Repo.all(User)
@@ -25,11 +25,17 @@ defmodule Polytan.Context.Account.Users do
   end
 
   def load_accounts(id) do
+    active_memberships_query =
+      from(am in AccountMembership,
+        where: am.status == "active",
+        preload: [:account]
+      )
+
     User
     |> where(id: ^id)
     |> preload([
       :owned_accounts,
-      account_memberships: [:account]
+      account_memberships: ^active_memberships_query
     ])
     |> Repo.one()
   end

@@ -4,6 +4,7 @@ defmodule Polytan.Schema.Accounts.AccountMembership do
 
   alias Polytan.Schema.Accounts.{Account, User}
 
+  @statuses ~w[active inactive deactivated removed left]
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "account_memberships" do
@@ -25,10 +26,19 @@ defmodule Polytan.Schema.Accounts.AccountMembership do
   def changeset(account_membership, attrs) do
     account_membership
     |> cast(attrs, schema_fields(__MODULE__))
-    |> validate_required([
-      :account_id,
-      :user_id
-    ])
+    |> validate_required([:account_id, :user_id])
+    |> validate_inclusion(:status, @statuses)
+    |> validate_removed_reason()
     |> unique_constraint([:account_id, :user_id])
+  end
+
+  defp validate_removed_reason(changeset) do
+    case get_field(changeset, :status) do
+      "removed" ->
+        validate_required(changeset, [:removed_reason])
+
+      _ ->
+        changeset
+    end
   end
 end

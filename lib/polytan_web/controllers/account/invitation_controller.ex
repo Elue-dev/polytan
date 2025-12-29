@@ -4,6 +4,7 @@ defmodule PolytanWeb.InvitationController do
   alias Polytan.Core.Permissions
   alias Polytan.Context.Account.{Invitations, AccountMemberships, Users}
   alias Polytan.Schema.Accounts.{Invitation, User}
+  alias Polytan.Utils.Response
 
   action_fallback PolytanWeb.FallbackController
 
@@ -48,7 +49,7 @@ defmodule PolytanWeb.InvitationController do
       |> json(%{message: "Invitation accepted successfully"})
     else
       {:error, :invalid_invitation} ->
-        respond(conn, :bad_request, "Invalid or expired invitation")
+        {:error, :invalid_invitation}
 
       {:error, :already_member} ->
         respond(conn, :bad_request, "Already a member")
@@ -64,7 +65,7 @@ defmodule PolytanWeb.InvitationController do
   def delete(conn, %{"id" => id}) do
     case Invitations.get_invitation(id) do
       nil ->
-        respond(conn, :bad_request, "Invalid or expired invitation")
+        {:error, :invalid_invitation}
 
       invitation ->
         with {:ok, %Invitation{}} <- Invitations.delete_invitation(invitation) do
@@ -164,15 +165,9 @@ defmodule PolytanWeb.InvitationController do
         conn
 
       {:error, reason} ->
-        conn
-        |> put_status(status_for(reason))
-        |> json(%{error: Atom.to_string(reason)})
-        |> halt()
+        Response.permission_response(conn, reason)
     end
   end
-
-  defp status_for(:forbidden), do: :forbidden
-  defp status_for(:unauthorized), do: :unauthorized
 
   defp respond(conn, status, message) do
     conn

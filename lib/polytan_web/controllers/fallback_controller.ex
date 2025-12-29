@@ -33,6 +33,20 @@ defmodule PolytanWeb.FallbackController do
     |> json(%{error: "Invalid email or password"})
   end
 
+  def call(conn, {:error, :invalid_invitation}) do
+    conn
+    |> put_status(:bad_request)
+    |> json(%{error: "Invalid or expired invitation"})
+  end
+
+  def call(conn, {:error, :no_active_accounts}) do
+    conn
+    |> put_status(:unauthorized)
+    |> json(%{
+      error: "You don’t belong to any active organization. Ask an administrator to invite you."
+    })
+  end
+
   def call(conn, {:error, :forbidden}) do
     conn
     |> put_status(:forbidden)
