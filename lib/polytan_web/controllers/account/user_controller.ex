@@ -7,7 +7,13 @@ defmodule PolytanWeb.UserController do
 
   action_fallback PolytanWeb.FallbackController
 
+  # TODO: implement token blacklist, to invalidate only a specific token
+  # but others remain valid in cases where user is logged into multiple devices
+
   def logout(conn, _params) do
+  end
+
+  def logout_all_accounts(conn, _params) do
     user = conn.assigns.current_user
 
     with {:ok, _} <- revoke_current_token(user) do

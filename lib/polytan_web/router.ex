@@ -41,6 +41,7 @@ defmodule PolytanWeb.Router do
 
     scope "/auth" do
       post "/logout", UserController, :logout
+      post "/logout/all", UserController, :logout_all_accounts
     end
   end
 

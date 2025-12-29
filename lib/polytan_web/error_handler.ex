@@ -13,7 +13,21 @@ defmodule PolytanWeb.ErrorHandler do
 
     conn
     |> put_status(:not_found)
-    |> json(%{errors: sanitized})
+    |> json(%{code: "NO_ROUTE_FOUND", error: sanitized})
+    |> halt()
+  end
+
+  def handle_errors(
+        conn,
+        %{reason: %FunctionClauseError{module: PolytanWeb.FallbackController}}
+      ) do
+    conn
+    |> put_status(:internal_server_error)
+    |> json(%{
+      # what this means is, it tried to get an error response from fallback_controller, but couldn't find any
+      code: "FALLBACK_CTRL_MISMATCH",
+      error: "An unexpected error occurred while processing the request"
+    })
     |> halt()
   end
 
@@ -22,7 +36,7 @@ defmodule PolytanWeb.ErrorHandler do
 
     conn
     |> put_status(determine_status_code(message))
-    |> json(%{errors: sanitized_message})
+    |> json(%{error: sanitized_message})
     |> halt()
   end
 
@@ -31,7 +45,7 @@ defmodule PolytanWeb.ErrorHandler do
 
     conn
     |> put_status(:internal_server_error)
-    |> json(%{errors: sanitized_message})
+    |> json(%{error: sanitized_message})
     |> halt()
   end
 
@@ -85,8 +99,6 @@ defmodule PolytanWeb.ErrorHandler do
       "pool_size"
     ])
   end
-
-  defp database_error?(nil), do: false
 
   defp database_error?(message) when is_binary(message) do
     String.contains?(message, [
