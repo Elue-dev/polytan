@@ -27,7 +27,7 @@ defmodule Polytan.Context.Account.Invitations do
     end
   end
 
-  def create_invitation(attrs) do
+  def new(attrs) do
     %Invitation{}
     |> Invitation.changeset(attrs)
     |> Repo.insert()
@@ -39,7 +39,7 @@ defmodule Polytan.Context.Account.Invitations do
     |> Repo.update()
   end
 
-  def delete_invitation(%Invitation{} = invitation) do
+  def remove(%Invitation{} = invitation) do
     Repo.delete(invitation)
   end
 

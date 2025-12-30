@@ -4,6 +4,7 @@ defmodule Polytan.Core.Permissions do
   @permissions [
     "account.admin",
     "account.update",
+    "account.member",
     "invite.create",
     "invite.delete",
     "member.remove",

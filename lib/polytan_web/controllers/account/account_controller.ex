@@ -51,11 +51,8 @@ defmodule PolytanWeb.AccountController do
       |> put_status(:ok)
       |> render(:show, user: user, token: token)
     else
-      [] ->
-        {:error, :no_active_accounts}
-
-      _ ->
-        {:error, :invalid_credentials}
+      [] -> {:error, :no_active_accounts}
+      _ -> {:error, :invalid_credentials}
     end
   end
 
@@ -111,11 +108,11 @@ defmodule PolytanWeb.AccountController do
         old_owner_perms = update_owner_role(old_owner.permissions, :revoke)
 
         with {:ok, _} <-
-               AccountMemberships.update_account_membership(old_owner, %{
+               AccountMemberships.update(old_owner, %{
                  permissions: old_owner_perms
                }),
              {:ok, _} <-
-               AccountMemberships.update_account_membership(new_owner, %{
+               AccountMemberships.update(new_owner, %{
                  permissions: new_owner_perms
                }) do
           :ok

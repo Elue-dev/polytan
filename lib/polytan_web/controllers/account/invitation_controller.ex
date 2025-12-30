@@ -3,7 +3,7 @@ defmodule PolytanWeb.InvitationController do
 
   alias Polytan.Core.Permissions
   alias Polytan.Context.Account.{Invitations, AccountMemberships, Users}
-  alias Polytan.Schema.Accounts.{Invitation, User}
+  alias Polytan.Schema.Accounts.User
   alias Polytan.Utils.Response
 
   action_fallback PolytanWeb.FallbackController
@@ -15,35 +15,42 @@ defmodule PolytanWeb.InvitationController do
     render(conn, :index, invitations: invitations)
   end
 
-  def create(conn, params) do
+  def create(conn, %{"email" => email, "permissions" => permissions} = params) do
     %{
       current_account: current_account,
       current_user: current_user
     } = conn.assigns
 
-    params =
-      params
-      |> Map.put("invited_by", current_user.id)
-      |> Map.put("account_id", current_account.id)
-
-    with false <- already_member?(current_account.id, params["email"]),
-         {:ok, %Invitation{} = _invitation} <- Invitations.create_invitation(params) do
-      conn
-      |> put_status(:created)
-      |> json(%{message: "Invitation sent successfully"})
+    with true <- "account.owner" not in permissions,
+         false <- already_member?(current_account.id, email),
+         {:ok, _} <-
+           params
+           |> Map.put("invited_by", current_user.id)
+           |> Map.put("account_id", current_account.id)
+           |> Map.put("permissions", permissions)
+           |> Invitations.new() do
+      Response.respond(conn, :created, "Invitation sent successfully")
     else
+      false ->
+        Response.send_error(
+          conn,
+          :forbidden,
+          "You can't add ownership permission. Ownership must be transferred."
+        )
+
       {:error, :already_member} ->
-        conn
-        |> put_status(:bad_request)
-        |> json(%{message: "User is already a member of the account"})
+        maybe_renew_membership(conn, current_account.id, params)
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
   def accept(conn, %{"id" => id} = params) do
     with {:ok, invitation} <- Invitations.get_valid_invitation(id),
          {:ok, user} <- maybe_create_user(params, invitation.email),
-         {:ok, _membership} <- maybe_create_membership(user, invitation),
-         {:ok, _invitation} <- mark_invitation_as_accepted(invitation) do
+         {:ok, _} <- maybe_create_membership(user, invitation),
+         {:ok, _} <- Invitations.remove(invitation) do
       conn
       |> put_status(:ok)
       |> json(%{message: "Invitation accepted successfully"})
@@ -63,14 +70,12 @@ defmodule PolytanWeb.InvitationController do
   end
 
   def delete(conn, %{"id" => id}) do
-    case Invitations.get_invitation(id) do
-      nil ->
-        {:error, :invalid_invitation}
-
-      invitation ->
-        with {:ok, %Invitation{}} <- Invitations.delete_invitation(invitation) do
-          send_resp(conn, :no_content, "")
-        end
+    with {:ok, invitation} <- Invitations.get_invitation(id),
+         {:ok, _} <- invitation |> Invitations.remove() do
+      send_resp(conn, :no_content, "")
+    else
+      nil -> {:error, "Invitation not found"}
+      {:error, reason} -> {:error, reason}
     end
   end
 
@@ -97,6 +102,27 @@ defmodule PolytanWeb.InvitationController do
     case AccountMemberships.get_matching_memberships(account_id, user_id) do
       [] -> false
       [_ | _] -> {:error, :already_member}
+    end
+  end
+
+  defp maybe_renew_membership(conn, account_id, params) do
+    case Users.get_by_email(params["email"]) do
+      nil ->
+        {:error, "User not found"}
+
+      user ->
+        with {:ok, membership} <- AccountMemberships.get_inactive_membership(account_id, user.id),
+             {:ok, _} <-
+               membership
+               |> AccountMemberships.update(%{
+                 status: "active",
+                 permissions: params["permissions"]
+               }) do
+          Response.respond(conn, :ok, "User now an account member")
+        else
+          nil ->
+            {:error, "User is already a member of the account"}
+        end
     end
   end
 
@@ -131,7 +157,7 @@ defmodule PolytanWeb.InvitationController do
       invited_by: invitation.invited_by
     }
 
-    case AccountMemberships.create_account_membership(membership_params) do
+    case AccountMemberships.new(membership_params) do
       {:ok, membership} ->
         {:ok, membership}
 
@@ -142,15 +168,6 @@ defmodule PolytanWeb.InvitationController do
           {:error, changeset}
         end
     end
-  end
-
-  defp mark_invitation_as_accepted(invitation) do
-    # TODO: should this just be deleted? or kept for audit trail?
-
-    invitation
-    |> Invitations.update_invitation(%{
-      accepted_at: DateTime.utc_now() |> DateTime.truncate(:second)
-    })
   end
 
   defp authorize_invite(conn, _opts) do

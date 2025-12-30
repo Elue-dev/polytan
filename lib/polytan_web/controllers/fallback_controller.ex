@@ -53,6 +53,12 @@ defmodule PolytanWeb.FallbackController do
     })
   end
 
+  def call(conn, {:error, :not_a_member}) do
+    conn
+    |> put_status(:bad_request)
+    |> json(%{error: "User is not a member of the account."})
+  end
+
   def call(conn, {:error, :user_not_found}) do
     conn
     |> put_status(:not_found)

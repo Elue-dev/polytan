@@ -33,23 +33,35 @@ defmodule Polytan.Context.Account.AccountMemberships do
     |> Repo.one()
   end
 
-  def create_account_membership(attrs) do
+  def get_inactive_membership(account_id, user_id) do
+    AccountMembership
+    |> where(
+      [m],
+      m.account_id == ^account_id and
+        m.user_id == ^user_id and
+        m.status != "active"
+    )
+    |> preload(:account)
+    |> Repo.one()
+  end
+
+  def new(attrs) do
     %AccountMembership{}
     |> AccountMembership.changeset(attrs)
     |> Repo.insert()
   end
 
-  def update_account_membership(%AccountMembership{} = account_membership, attrs) do
+  def update(%AccountMembership{} = account_membership, attrs) do
     account_membership
     |> AccountMembership.changeset(attrs)
     |> Repo.update()
   end
 
-  def delete_account_membership(%AccountMembership{} = account_membership) do
+  def remove(%AccountMembership{} = account_membership) do
     Repo.delete(account_membership)
   end
 
-  def change_account_membership(%AccountMembership{} = account_membership, attrs \\ %{}) do
+  def change(%AccountMembership{} = account_membership, attrs \\ %{}) do
     AccountMembership.changeset(account_membership, attrs)
   end
 end

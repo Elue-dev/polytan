@@ -40,7 +40,7 @@ defmodule Polytan.Context.Account.Accounts do
              |> Map.put("account_id", account.id)
              |> Map.put("user_id", user.id)
              |> Map.put("permissions", ["account.owner"])
-             |> AccountMemberships.create_account_membership() do
+             |> AccountMemberships.new() do
         %{user: user, account: account}
       else
         {:error, %Ecto.Changeset{} = changeset} ->

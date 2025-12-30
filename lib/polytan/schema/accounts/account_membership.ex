@@ -3,6 +3,7 @@ defmodule Polytan.Schema.Accounts.AccountMembership do
   import Ecto.Changeset
 
   alias Polytan.Schema.Accounts.{Account, User}
+  alias Polytan.Core.Permissions
 
   @statuses ~w[active inactive deactivated removed left]
 
@@ -29,8 +30,28 @@ defmodule Polytan.Schema.Accounts.AccountMembership do
     |> cast(attrs, schema_fields(__MODULE__))
     |> validate_required([:account_id, :user_id])
     |> validate_inclusion(:status, @statuses)
+    |> validate_permissions()
     |> validate_removed_reason()
     |> unique_constraint([:account_id, :user_id])
+  end
+
+  defp validate_permissions(changeset) do
+    all_permissions = Permissions.get_permissions()
+    permissions = get_field(changeset, :permissions)
+
+    invalid = permissions |> Enum.reject(&(&1 in all_permissions))
+
+    case invalid do
+      [] ->
+        changeset
+
+      _ ->
+        add_error(
+          changeset,
+          :permissions,
+          "contains invalid permission(s) #{Enum.join(invalid, ", ")}"
+        )
+    end
   end
 
   defp validate_removed_reason(changeset) do
