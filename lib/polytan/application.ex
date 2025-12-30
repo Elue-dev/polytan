@@ -10,7 +10,7 @@ defmodule Polytan.Application do
       Polytan.Repo,
       {DNSCluster, query: Application.get_env(:polytan, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Polytan.PubSub},
-      PolytanWeb.Auth.TokenBlacklist,
+      PolytanWeb.Auth.TokenBlacklistProcess,
       PolytanWeb.Endpoint
     ]
 

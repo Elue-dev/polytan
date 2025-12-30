@@ -1,4 +1,4 @@
-defmodule PolytanWeb.Auth.TokenBlacklist do
+defmodule PolytanWeb.Auth.TokenBlacklistProcess do
   use GenServer
   require Logger
 
@@ -31,13 +31,13 @@ defmodule PolytanWeb.Auth.TokenBlacklist do
   def revoked?(jti) when is_binary(jti) do
     case :ets.lookup(@table_name, jti) do
       [{^jti, exp_timestamp}] ->
-        case DateTime.to_unix(DateTime.utc_now()) < exp_timestamp do
-          true ->
-            true
+        now = DateTime.to_unix(DateTime.utc_now())
 
-          false ->
-            :ets.delete(@table_name, jti)
-            false
+        if now < exp_timestamp do
+          true
+        else
+          :ets.delete(@table_name, jti)
+          false
         end
 
       [] ->

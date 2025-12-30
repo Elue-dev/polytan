@@ -4,7 +4,7 @@ defmodule PolytanWeb.UserController do
   alias Polytan.Context.Account.Users
   alias Polytan.Schema.Accounts.User
   alias PolytanWeb.Auth.Guardian
-  alias PolytanWeb.Auth.TokenBlacklist
+  alias PolytanWeb.Auth.TokenBlacklistProcess
   alias Polytan.Utils.Response
 
   action_fallback PolytanWeb.FallbackController
@@ -48,7 +48,7 @@ defmodule PolytanWeb.UserController do
     case Guardian.decode_and_verify(token, %{}) do
       {:ok, %{"jti" => jti, "exp" => exp}} ->
         expires_at = DateTime.from_unix!(exp)
-        TokenBlacklist.revoke(jti, expires_at)
+        TokenBlacklistProcess.revoke(jti, expires_at)
         {:ok, :revoked}
 
       {:error, reason} ->

@@ -4,7 +4,7 @@ defmodule PolytanWeb.Auth.Guardian do
   alias Polytan.Context.Account.Users
   alias Polytan.Schema.Accounts.User
   alias Polytan.Core.Password
-  alias PolytanWeb.Auth.TokenBlacklist
+  alias PolytanWeb.Auth.TokenBlacklistProcess
 
   def subject_for_token(%{id: id}, _claims), do: {:ok, to_string(id)}
   def subject_for_token(_, _), do: {:error, :no_id_provided}
@@ -21,7 +21,7 @@ defmodule PolytanWeb.Auth.Guardian do
       user ->
         cond do
           user.token_version != token_version -> {:error, :token_revoked}
-          TokenBlacklist.revoked?(jti) -> {:error, :token_revoked}
+          TokenBlacklistProcess.revoked?(jti) -> {:error, :token_revoked}
           true -> {:ok, user}
         end
     end
