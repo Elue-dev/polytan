@@ -75,11 +75,8 @@ defmodule PolytanWeb.AccountMembershipController do
       end
 
     case Permissions.authorize(conn, permission) do
-      :ok ->
-        conn
-
-      {:error, reason} ->
-        Response.permission_response(conn, reason)
+      :ok -> conn
+      {:error, reason} -> Response.permission_response(conn, reason)
     end
   end
 end
