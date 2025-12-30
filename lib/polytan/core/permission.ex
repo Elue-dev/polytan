@@ -2,6 +2,7 @@ defmodule Polytan.Core.Permissions do
   alias Polytan.Schema.Accounts.AccountMembership
 
   @permissions [
+    "account.owner",
     "account.admin",
     "account.update",
     "account.member",

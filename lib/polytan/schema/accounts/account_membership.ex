@@ -27,7 +27,7 @@ defmodule Polytan.Schema.Accounts.AccountMembership do
   @doc false
   def changeset(account_membership, attrs) do
     account_membership
-    |> cast(attrs, schema_fields(__MODULE__))
+    |> strict_cast(attrs, schema_fields(__MODULE__))
     |> validate_required([:account_id, :user_id])
     |> validate_inclusion(:status, @statuses)
     |> validate_permissions()
@@ -39,6 +39,7 @@ defmodule Polytan.Schema.Accounts.AccountMembership do
     all_permissions = Permissions.get_permissions()
     permissions = get_field(changeset, :permissions)
 
+    IO.puts("PERMSSS: #{inspect(permissions)}")
     invalid = permissions |> Enum.reject(&(&1 in all_permissions))
 
     case invalid do
