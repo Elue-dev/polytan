@@ -15,6 +15,12 @@ defmodule PolytanWeb.FallbackController do
     |> render(:"404")
   end
 
+  def call(conn, {:error, message}) when is_binary(message) do
+    conn
+    |> put_status(:bad_request)
+    |> json(%{error: message})
+  end
+
   def call(conn, {:error, :bad_request}) do
     conn
     |> put_status(:bad_request)

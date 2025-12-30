@@ -59,7 +59,7 @@ defmodule PolytanWeb.Router do
     pipe_through ~w[api auth]a
 
     scope "/accounts" do
-      post "/transfer-ownership/:new_owner_id", AccountController, :transfer_ownership
+      post "/transfer-ownership", AccountController, :transfer_ownership
     end
   end
 

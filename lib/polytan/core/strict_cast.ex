@@ -13,7 +13,7 @@ defmodule Polytan.Core.StrictCast do
 
     case unexpected do
       [] -> changeset
-      _ -> add_error(changeset, :detail, "unrecognized field(s): #{Enum.join(unexpected, ", ")}")
+      _ -> add_error(changeset, :detail, "Unrecognized field(s): #{Enum.join(unexpected, ", ")}")
     end
   end
 
