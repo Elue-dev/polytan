@@ -47,16 +47,16 @@ defmodule PolytanWeb.FallbackController do
     })
   end
 
+  def call(conn, {:error, :user_not_found}) do
+    conn
+    |> put_status(:not_found)
+    |> json(%{error: "User not found"})
+  end
+
   def call(conn, {:error, :forbidden}) do
     conn
     |> put_status(:forbidden)
     |> json(%{error: "Forbidden"})
-  end
-
-  def call(conn, {:error, :not_found}) do
-    conn
-    |> put_status(:not_found)
-    |> json(%{error: "Not Found"})
   end
 
   def call(conn, {:error, _reason}) do

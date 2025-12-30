@@ -19,6 +19,7 @@ defmodule PolytanWeb.Plugs.SetAccount do
       |> assign(:current_user, user)
       |> assign(:current_account, membership.account)
       |> assign(:current_membership, membership)
+      |> assign(:current_user_token, token)
     else
       nil ->
         respond(conn, :forbidden, "Forbidden")

@@ -14,10 +14,16 @@ defmodule Polytan.Utils.Response do
     |> json(%{error: error})
   end
 
-  def respond(conn, status, message) do
+  def respond(conn, status, message) when is_binary(message) do
     conn
     |> put_status(status)
     |> json(%{message: message})
+  end
+
+  def respond(conn, status, json) do
+    conn
+    |> put_status(status)
+    |> json(json)
   end
 
   defp status_for(:forbidden), do: :forbidden
