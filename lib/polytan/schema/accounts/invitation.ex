@@ -24,25 +24,9 @@ defmodule Polytan.Schema.Accounts.Invitation do
     invitation
     |> strict_cast(attrs, schema_fields(__MODULE__))
     |> validate_required([:email, :permissions])
-    |> validate_permissions()
+    |> Permissions.validate()
     |> maybe_put_token()
     |> maybe_put_expiration_date()
-  end
-
-  defp validate_permissions(changeset) do
-    validate_change(changeset, :permissions, &permissions_validator/2)
-  end
-
-  defp permissions_validator(_field, permissions) do
-    allowed_permissions = Permissions.get_permissions()
-
-    permissions
-    |> Enum.uniq()
-    |> Enum.filter(fn permission -> permission not in allowed_permissions end)
-    |> case do
-      [] -> []
-      _ -> [permissions: "contains invalid permission(s)"]
-    end
   end
 
   defp maybe_put_token(changeset) do

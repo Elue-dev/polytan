@@ -1,5 +1,6 @@
 defmodule Polytan.Core.Permissions do
   alias Polytan.Schema.Accounts.AccountMembership
+  import Ecto.Changeset
 
   @permissions [
     "account.owner",
@@ -33,6 +34,23 @@ defmodule Polytan.Core.Permissions do
 
       _ ->
         {:error, :unauthorized}
+    end
+  end
+
+  def validate(changeset) do
+    provided_permissions = get_field(changeset, :permissions) || []
+    invalid = provided_permissions |> Enum.reject(&(&1 in @permissions))
+
+    case invalid do
+      [] ->
+        changeset
+
+      _ ->
+        add_error(
+          changeset,
+          :permissions,
+          "contains invalid permission(s) #{Enum.join(invalid, ", ")}"
+        )
     end
   end
 

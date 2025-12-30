@@ -30,29 +30,9 @@ defmodule Polytan.Schema.Accounts.AccountMembership do
     |> strict_cast(attrs, schema_fields(__MODULE__))
     |> validate_required([:account_id, :user_id])
     |> validate_inclusion(:status, @statuses)
-    |> validate_permissions()
+    |> Permissions.validate()
     |> validate_removed_reason()
     |> unique_constraint([:account_id, :user_id])
-  end
-
-  defp validate_permissions(changeset) do
-    all_permissions = Permissions.get_permissions()
-    permissions = get_field(changeset, :permissions)
-
-    IO.puts("PERMSSS: #{inspect(permissions)}")
-    invalid = permissions |> Enum.reject(&(&1 in all_permissions))
-
-    case invalid do
-      [] ->
-        changeset
-
-      _ ->
-        add_error(
-          changeset,
-          :permissions,
-          "contains invalid permission(s) #{Enum.join(invalid, ", ")}"
-        )
-    end
   end
 
   defp validate_removed_reason(changeset) do

@@ -52,7 +52,7 @@ defmodule PolytanWeb.Router do
     get "/invitations", InvitationController, :list
     post "/invitations", InvitationController, :create
     delete "/invitations/:id", InvitationController, :delete
-    patch "/memberships/:user_id", AccountMembershipController, :update_permissions
+    patch "/memberships/:user_id/permissions", AccountMembershipController, :update_permissions
     post "/memberships/:user_id/remove", AccountMembershipController, :remove_membership
   end
 
