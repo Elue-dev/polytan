@@ -57,7 +57,7 @@ defmodule PolytanWeb.ErrorHandler do
   def sanitize_error_message(message) when is_binary(message) do
     cond do
       database_connection_error?(message) ->
-        "Network error - please try again later"
+        "Network error, please try again later"
 
       String.contains?(message, ["timeout", "timed out"]) ->
         "Request timeout,  please try again"

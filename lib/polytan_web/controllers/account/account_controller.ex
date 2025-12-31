@@ -2,12 +2,11 @@ defmodule PolytanWeb.AccountController do
   use PolytanWeb, :controller
   alias Polytan.Repo
 
+  alias PolytanWeb.Auth.Guardian
   alias Polytan.Context.Account.{Accounts, Users, AccountMemberships}
   alias Polytan.Schema.Accounts.{Account, User}
-  alias PolytanWeb.Auth.Guardian
-  alias Polytan.Core.Password
-  alias Polytan.Utils.{Response, RequestValidator}
-  alias Polytan.Core.Permissions
+  alias Polytan.Core.{Permissions, RequestValidator, Password}
+  alias Polytan.Utils.Response
 
   action_fallback PolytanWeb.FallbackController
 
@@ -65,7 +64,7 @@ defmodule PolytanWeb.AccountController do
          {:ok, _} <- validate_membership(current_account, new_owner_id, "New owner"),
          true <- ensure_not_an_owner(current_account, new_owner_id) do
       case Repo.transaction(fn ->
-             with {:ok, %Account{}} <- Accounts.update_account(current_account, update_params),
+             with {:ok, %Account{}} <- Accounts.update(current_account, update_params),
                   :ok <- update_permissions(current_account.id, old_owner, new_owner_id) do
                :ok
              else

@@ -33,7 +33,7 @@ defmodule Polytan.Context.Account.Invitations do
     |> Repo.insert()
   end
 
-  def update_invitation(%Invitation{} = invitation, attrs) do
+  def update(%Invitation{} = invitation, attrs) do
     invitation
     |> Invitation.changeset(attrs)
     |> Repo.update()
@@ -43,7 +43,7 @@ defmodule Polytan.Context.Account.Invitations do
     Repo.delete(invitation)
   end
 
-  def change_invitation(%Invitation{} = invitation, attrs \\ %{}) do
+  def change(%Invitation{} = invitation, attrs \\ %{}) do
     Invitation.changeset(invitation, attrs)
   end
 end

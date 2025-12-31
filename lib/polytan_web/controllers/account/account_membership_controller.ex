@@ -3,9 +3,8 @@ defmodule PolytanWeb.AccountMembershipController do
 
   alias Polytan.Context.Account.AccountMemberships, as: Memberships
   alias Polytan.Schema.Accounts.AccountMembership
-  alias Polytan.Core.Permissions
+  alias Polytan.Core.{Permissions, RequestValidator}
   alias Polytan.Utils.Response
-  alias Polytan.Utils.RequestValidator
 
   action_fallback PolytanWeb.FallbackController
 

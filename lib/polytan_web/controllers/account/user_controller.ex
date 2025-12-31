@@ -59,7 +59,7 @@ defmodule PolytanWeb.UserController do
   defp revoke_all_tokens(user) do
     case Users.get_user(user.id) do
       nil -> {:error, :user_not_found}
-      %User{} = user -> Users.update_user(user, %{token_version: user.token_version + 1})
+      %User{} = user -> Users.update(user, %{token_version: user.token_version + 1})
     end
   end
 end

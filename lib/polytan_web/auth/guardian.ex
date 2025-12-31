@@ -3,7 +3,6 @@ defmodule PolytanWeb.Auth.Guardian do
 
   alias Polytan.Context.Account.Users
   alias Polytan.Schema.Accounts.User
-  alias Polytan.Core.Password
   alias PolytanWeb.Auth.TokenBlacklistProcess
 
   def subject_for_token(%{id: id}, _claims), do: {:ok, to_string(id)}
@@ -38,8 +37,14 @@ defmodule PolytanWeb.Auth.Guardian do
 
   def create_token(user, type) do
     jti = Ecto.UUID.generate()
-    {:ok, token, _claims} = encode_and_sign(user, %{}, token_options(type, jti))
-    {:ok, token}
+
+    case encode_and_sign(user, %{}, token_options(type, jti)) do
+      {:ok, token, _claims} ->
+        {:ok, token}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
   def verify_user_token(token) do
@@ -53,10 +58,6 @@ defmodule PolytanWeb.Auth.Guardian do
       {:error, _} ->
         :error
     end
-  end
-
-  def validate_password(password, hash) do
-    Password.validate(password, hash)
   end
 
   defp token_options(type, jti) do

@@ -1,5 +1,6 @@
 defmodule PolytanWeb.InvitationController do
   use PolytanWeb, :controller
+  alias Polytan.Repo
 
   alias Polytan.Core.Permissions
   alias Polytan.Context.Account.{Invitations, AccountMemberships, Users}
@@ -48,21 +49,27 @@ defmodule PolytanWeb.InvitationController do
 
   def accept(conn, %{"id" => id} = params) do
     with {:ok, invitation} <- Invitations.get_valid_invitation(id),
-         {:ok, user} <- maybe_create_user(params, invitation.email),
-         {:ok, _} <- maybe_create_membership(user, invitation),
-         {:ok, _} <- Invitations.remove(invitation) do
-      conn
-      |> put_status(:ok)
-      |> json(%{message: "Invitation accepted successfully"})
+         {:ok, _result} <-
+           Repo.transaction(fn ->
+             with {:ok, user} <- maybe_create_user(params, invitation.email),
+                  {:ok, _} <- maybe_create_membership(user, invitation),
+                  {:ok, _} <- Invitations.remove(invitation) do
+               :ok
+             else
+               {:error, reason} ->
+                 Repo.rollback(reason)
+             end
+           end) do
+      Response.respond(conn, :ok, "Invitation accepted successfully")
     else
       {:error, :invalid_invitation} ->
-        {:error, :invalid_invitation}
+        {:error, "Invalid or expired invitation"}
 
       {:error, :already_member} ->
-        respond(conn, :bad_request, "Already a member")
+        {:error, "User already a member of this account"}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:error, changeset}
+        respond(conn, :unprocessable_entity, changeset)
 
       {:error, reason} ->
         {:error, reason}
@@ -139,7 +146,7 @@ defmodule PolytanWeb.InvitationController do
       |> Map.take(~w[first_name last_name password])
       |> Map.put("email", email)
 
-    with {:ok, %User{} = user} <- Users.create_user(user_params) do
+    with {:ok, %User{} = user} <- Users.new(user_params) do
       {:ok, user}
     else
       {:error, reason} ->

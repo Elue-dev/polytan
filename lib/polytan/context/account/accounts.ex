@@ -30,11 +30,11 @@ defmodule Polytan.Context.Account.Accounts do
       account_params = Map.take(params, @account_fields)
       membership_params = Map.take(params, @membership_fields)
 
-      with {:ok, user} <- Users.create_user(user_params),
+      with {:ok, user} <- Users.new(user_params),
            {:ok, account} <-
              account_params
              |> Map.put("owner_id", user.id)
-             |> create_account(),
+             |> new(),
            {:ok, _membership} <-
              membership_params
              |> Map.put("account_id", account.id)
@@ -52,23 +52,23 @@ defmodule Polytan.Context.Account.Accounts do
     end)
   end
 
-  def create_account(attrs) do
+  def new(attrs) do
     %Account{}
     |> Account.changeset(attrs)
     |> Repo.insert()
   end
 
-  def update_account(%Account{} = account, attrs) do
+  def update(%Account{} = account, attrs) do
     account
     |> Account.changeset(attrs)
     |> Repo.update()
   end
 
-  def delete_account(%Account{} = account) do
+  def remove(%Account{} = account) do
     Repo.delete(account)
   end
 
-  def change_account(%Account{} = account, attrs \\ %{}) do
+  def change(%Account{} = account, attrs \\ %{}) do
     Account.changeset(account, attrs)
   end
 end

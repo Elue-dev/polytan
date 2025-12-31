@@ -49,7 +49,7 @@ defmodule Polytan.Core.Permissions do
         add_error(
           changeset,
           :permissions,
-          "contains invalid permission(s) #{Enum.join(invalid, ", ")}"
+          "contains invalid permission(s): #{Enum.join(invalid, ", ")}"
         )
     end
   end

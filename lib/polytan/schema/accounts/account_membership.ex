@@ -31,11 +31,11 @@ defmodule Polytan.Schema.Accounts.AccountMembership do
     |> validate_required([:account_id, :user_id])
     |> validate_inclusion(:status, @statuses)
     |> Permissions.validate()
-    |> validate_removed_reason()
+    |> maybe_validate_removed_reason()
     |> unique_constraint([:account_id, :user_id])
   end
 
-  defp validate_removed_reason(changeset) do
+  defp maybe_validate_removed_reason(changeset) do
     case get_field(changeset, :status) do
       "removed" ->
         validate_required(changeset, [:removed_reason])

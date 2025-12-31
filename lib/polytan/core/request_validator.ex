@@ -1,4 +1,4 @@
-defmodule Polytan.Utils.RequestValidator do
+defmodule Polytan.Core.RequestValidator do
   def validate_required(params, required_fields) when is_map(params) do
     errors =
       required_fields
