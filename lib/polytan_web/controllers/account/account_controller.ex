@@ -1,6 +1,7 @@
 defmodule PolytanWeb.AccountController do
   use PolytanWeb, :controller
   alias Polytan.Repo
+  alias Ecto.Multi
 
   alias PolytanWeb.Auth.Guardian
   alias Polytan.Context.Account.{Accounts, Users, AccountMemberships}
@@ -11,7 +12,7 @@ defmodule PolytanWeb.AccountController do
   action_fallback PolytanWeb.FallbackController
 
   plug :authorize_action when action in [:transfer_ownership]
-  plug :validate_action when action in ~w[login transfer_ownership]a
+  plug :validate_fields when action in ~w[login transfer_ownership]a
 
   @account_owner "account.owner"
   @account_admin "account.admin"
@@ -62,25 +63,28 @@ defmodule PolytanWeb.AccountController do
     with {:ok, old_owner} <-
            validate_membership(current_account, current_account.owner_id, "Current owner"),
          {:ok, _} <- validate_membership(current_account, new_owner_id, "New owner"),
-         true <- ensure_not_an_owner(current_account, new_owner_id) do
-      case Repo.transaction(fn ->
-             with {:ok, %Account{}} <- Accounts.update(current_account, update_params),
-                  :ok <- update_permissions(current_account.id, old_owner, new_owner_id) do
-               :ok
-             else
-               {:error, reason} -> Repo.rollback(reason)
-             end
-           end) do
-        {:ok, :ok} ->
-          Response.respond(conn, :ok, "Account ownership transferred")
-      end
+         true <- ensure_not_an_owner(current_account, new_owner_id),
+         {:ok, _changes} <-
+           transfer_account_ownership(current_account, update_params, old_owner, new_owner_id) do
+      Response.respond(conn, :ok, "Account ownership transferred")
     else
       {:error, message} when is_binary(message) ->
         Response.send_error(conn, :bad_request, message)
 
       false ->
         Response.send_error(conn, :bad_request, "New owner is already the account owner")
+
+      {:error, _step, reason, _changes} ->
+        Response.send_error(conn, :unprocessable_entity, reason)
     end
+  end
+
+  @dialyzer {:nowarn_function, transfer_account_ownership: 4}
+  defp transfer_account_ownership(account, update_params, old_owner, new_owner_id) do
+    Multi.new()
+    |> Multi.update(:account, Accounts.change(account, update_params))
+    |> update_permissions(account.id, old_owner, new_owner_id)
+    |> Repo.transaction()
   end
 
   defp validate_membership(account, user_id, role_description) do
@@ -97,26 +101,26 @@ defmodule PolytanWeb.AccountController do
     end
   end
 
-  defp update_permissions(account_id, old_owner, new_owner_id) do
-    case AccountMemberships.get_active_membership(account_id, new_owner_id) do
-      nil ->
-        {:error, "New owner not a member of this account"}
+  defp update_permissions(multi, account_id, old_owner, new_owner_id) do
+    Multi.run(multi, :permissions, fn _repo, _changes ->
+      case AccountMemberships.get_active_membership(account_id, new_owner_id) do
+        nil ->
+          {:error, "New owner not a member of this account"}
 
-      new_owner ->
-        new_owner_perms = update_owner_role(new_owner.permissions, :grant)
-        old_owner_perms = update_owner_role(old_owner.permissions, :revoke)
+        new_owner ->
+          new_owner_perms = update_owner_role(new_owner.permissions, :grant)
+          old_owner_perms = update_owner_role(old_owner.permissions, :revoke)
 
-        with {:ok, _} <-
-               AccountMemberships.update(old_owner, %{
-                 permissions: old_owner_perms
-               }),
-             {:ok, _} <-
-               AccountMemberships.update(new_owner, %{
-                 permissions: new_owner_perms
-               }) do
-          :ok
-        end
-    end
+          with {:ok, _} <-
+                 AccountMemberships.update(old_owner, %{permissions: old_owner_perms}),
+               {:ok, _} <-
+                 AccountMemberships.update(new_owner, %{permissions: new_owner_perms}) do
+            {:ok, :permissions_updated}
+          else
+            {:error, reason} -> {:error, reason}
+          end
+      end
+    end)
   end
 
   defp update_owner_role(permissions, :revoke) do
@@ -134,7 +138,7 @@ defmodule PolytanWeb.AccountController do
   end
 
   defp authorize_action(conn, _opts) do
-    permission = action_fields(conn, :authorize)
+    permission = assert_fields(conn, :authorize)
 
     case Permissions.authorize(conn, permission) do
       :ok -> conn
@@ -142,8 +146,8 @@ defmodule PolytanWeb.AccountController do
     end
   end
 
-  defp validate_action(conn, _opts) do
-    fields = action_fields(conn, :validate)
+  defp validate_fields(conn, _opts) do
+    fields = assert_fields(conn, :validate)
 
     case RequestValidator.validate_required(conn.params, fields) do
       {:ok, _} -> conn
@@ -151,13 +155,13 @@ defmodule PolytanWeb.AccountController do
     end
   end
 
-  defp action_fields(conn, :authorize) do
+  defp assert_fields(conn, :authorize) do
     case conn.private.phoenix_action do
       :transfer_ownership -> @account_admin
     end
   end
 
-  defp action_fields(conn, :validate) do
+  defp assert_fields(conn, :validate) do
     case conn.private.phoenix_action do
       :login -> @login_fields
       :transfer_ownership -> @transfer_fields

@@ -1,6 +1,7 @@
 defmodule PolytanWeb.InvitationController do
   use PolytanWeb, :controller
   alias Polytan.Repo
+  alias Ecto.Multi
 
   alias Polytan.Core.Permissions
   alias Polytan.Context.Account.{Invitations, AccountMemberships, Users}
@@ -49,29 +50,19 @@ defmodule PolytanWeb.InvitationController do
 
   def accept(conn, %{"id" => id} = params) do
     with {:ok, invitation} <- Invitations.get_valid_invitation(id),
-         {:ok, _result} <-
-           Repo.transaction(fn ->
-             with {:ok, user} <- maybe_create_user(params, invitation.email),
-                  {:ok, _} <- maybe_create_membership(user, invitation),
-                  {:ok, _} <- Invitations.remove(invitation) do
-               :ok
-             else
-               {:error, reason} ->
-                 Repo.rollback(reason)
-             end
-           end) do
+         {:ok, _changes} <- accept_invitation_transaction(params, invitation) do
       Response.respond(conn, :ok, "Invitation accepted successfully")
     else
       {:error, :invalid_invitation} ->
         {:error, "Invalid or expired invitation"}
 
-      {:error, :already_member} ->
-        {:error, "User already a member of this account"}
+      {:error, :membership, :already_member, _changes} ->
+        {:error, "User is already a member of this account"}
 
-      {:error, %Ecto.Changeset{} = changeset} ->
+      {:error, _step, %Ecto.Changeset{} = changeset, _changes} ->
         respond(conn, :unprocessable_entity, changeset)
 
-      {:error, reason} ->
+      {:error, _step, reason, _changes} ->
         {:error, reason}
     end
   end
@@ -93,16 +84,34 @@ defmodule PolytanWeb.InvitationController do
     end
   end
 
-  defp maybe_create_user(params, email) do
-    case Users.get_by_email(email) do
-      nil -> create_user(params, email)
-      user -> {:ok, user}
-    end
+  @dialyzer {:nowarn_function, accept_invitation_transaction: 2}
+  def accept_invitation_transaction(params, invitation) do
+    Multi.new()
+    |> maybe_create_user(params, invitation.email)
+    |> maybe_create_membership(invitation)
+    |> clear_invitation(invitation)
+    |> Repo.transaction()
   end
 
-  defp maybe_create_membership(user, invitation) do
-    account_id = invitation.account_id
-    verify_membership(account_id, user, invitation)
+  defp maybe_create_user(multi, params, email) do
+    Multi.run(multi, :user, fn _repo, _changes ->
+      case Users.get_by_email(email) do
+        nil -> create_user(params, email)
+        user -> {:ok, user}
+      end
+    end)
+  end
+
+  defp maybe_create_membership(multi, invitation) do
+    Multi.run(multi, :membership, fn _repo, %{user: user} ->
+      verify_membership(invitation.account_id, user, invitation)
+    end)
+  end
+
+  defp clear_invitation(multi, invitation) do
+    Multi.run(multi, :clear_invitation, fn _repo, _changes ->
+      Invitations.remove(invitation)
+    end)
   end
 
   defp verify_membership(account_id, user_id) do
