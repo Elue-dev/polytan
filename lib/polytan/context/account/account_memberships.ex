@@ -43,6 +43,10 @@ defmodule Polytan.Context.Account.AccountMemberships do
     )
     |> preload(:account)
     |> Repo.one()
+    |> case do
+      {:ok, membership} -> {:ok, membership}
+      nil -> {:error, :not_found}
+    end
   end
 
   def new(attrs) do

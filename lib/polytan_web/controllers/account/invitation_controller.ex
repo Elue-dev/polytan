@@ -122,23 +122,21 @@ defmodule PolytanWeb.InvitationController do
   end
 
   defp maybe_renew_membership(conn, account_id, params) do
-    case Users.get_by_email(params["email"]) do
+    with {:ok, user} <- Users.get_by_email(params["email"]),
+         {:ok, membership} <- AccountMemberships.get_inactive_membership(account_id, user.id),
+         {:ok, _} <-
+           membership
+           |> AccountMemberships.update(%{
+             status: "active",
+             permissions: params["permissions"]
+           }) do
+      Response.respond(conn, :ok, "User now an account member")
+    else
       nil ->
         {:error, "User not found"}
 
-      user ->
-        with {:ok, membership} <- AccountMemberships.get_inactive_membership(account_id, user.id),
-             {:ok, _} <-
-               membership
-               |> AccountMemberships.update(%{
-                 status: "active",
-                 permissions: params["permissions"]
-               }) do
-          Response.respond(conn, :ok, "User now an account member")
-        else
-          nil ->
-            {:error, "User is already a member of the account"}
-        end
+      {:error, :not_found} ->
+        {:error, "User is already a member of the account"}
     end
   end
 
